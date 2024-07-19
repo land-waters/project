@@ -1,0 +1,24 @@
+class foodData {
+
+  String? SIGUN_NM ;
+  String? SIGUN_CD;
+  String? RESTRT_NM;
+  String? REPRSNT_FOOD_NM;
+  String? TASTFDPLC_TELNO;
+  String? REFINE_LOTNO_ADDR;
+  String? REFINE_ROADNM_ADDR;
+  String? REFINE_ZIP_CD;
+  String? REFINE_WGS84_LOGT;
+  String? REFINE_WGS84_LAT ;
+
+  foodData({this.SIGUN_NM,this.SIGUN_CD,this.RESTRT_NM,this.REPRSNT_FOOD_NM,this.TASTFDPLC_TELNO,
+  this.REFINE_LOTNO_ADDR,this.REFINE_ROADNM_ADDR,this.REFINE_ZIP_CD,this.REFINE_WGS84_LOGT,this.REFINE_WGS84_LAT});
+
+  factory foodData.fromJson(Map<String,dynamic> json) {
+    return foodData(SIGUN_NM: json['SIGUN_NM'],SIGUN_CD: json['SIGUN_CD'], RESTRT_NM: json['RESTRT_NM'],
+    REPRSNT_FOOD_NM: json['REPRSNT_FOOD_NM'], TASTFDPLC_TELNO: json['TASTFDPLC_TELNO'],
+    REFINE_LOTNO_ADDR: json['REFINE_LOTNO_ADDR'], REFINE_ROADNM_ADDR: json['REFINE_ROADNM_ADDR'],
+    REFINE_ZIP_CD: json['REFINE_ZIP_CD'], REFINE_WGS84_LOGT: json['REFINE_WGS84_LOGT'], REFINE_WGS84_LAT: json['REFINE_WGS84_LAT'] );
+  }
+}
+

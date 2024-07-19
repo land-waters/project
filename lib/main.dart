@@ -1,125 +1,199 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:project/foodList.dart';
+import 'package:project/locator/locator.dart';
 
 void main() {
-  runApp(const MyApp());
+  initLocator();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: LocationSearch(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class LocationSearch extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _LocationSearchState createState() => _LocationSearchState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _LocationSearchState extends State<LocationSearch> {
+  TextEditingController _startController = TextEditingController();
+  TextEditingController _endController = TextEditingController();
+  String _startLocation = '';
+  String _startLatitude = '';
+  String _startLongitude = '';
+  String _endLocation = '';
+  String _endLatitude = '';
+  String _endLongitude = '';
+  String _distanceMessage = '';
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  // 여기에 API 키를 직접 입력합니다.
+  final String apiKey = 'AIzaSyDMKs41kiiacK9CNt_nNEZXkv0gwoVC36Y';
+
+  Future<void> _searchLocation(String input, bool isStart) async {
+    // Geocoding API 요청 URL
+    String url =
+        'https://maps.googleapis.com/maps/api/geocode/json?address=$input&key=$apiKey';
+
+    var response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      if (data['results'].isNotEmpty) {
+        var location = data['results'][0]['geometry']['location'];
+        setState(() {
+          if (isStart) {
+            _startLocation = input;
+            _startLatitude = location['lat'].toString();
+            _startLongitude = location['lng'].toString();
+          } else {
+            _endLocation = input;
+            _endLatitude = location['lat'].toString();
+            _endLongitude = location['lng'].toString();
+          }
+        });
+        _calculateDistance();
+      } else {
+        setState(() {
+          if (isStart) {
+            _startLocation = 'No results found';
+            _startLatitude = '';
+            _startLongitude = '';
+          } else {
+            _endLocation = 'No results found';
+            _endLatitude = '';
+            _endLongitude = '';
+          }
+        });
+      }
+    } else {
+      setState(() {
+        if (isStart) {
+          _startLocation = 'Error: ${response.statusCode}';
+          _startLatitude = '';
+          _startLongitude = '';
+        } else {
+          _endLocation = 'Error: ${response.statusCode}';
+          _endLatitude = '';
+          _endLongitude = '';
+        }
+      });
+    }
+  }
+
+  List<double> distance(double startLatitude, double startLongitude, double endLatitude, double endLongitude) {
+    double distanceLatitude = (endLatitude - startLatitude).abs();
+    double distanceLongitude = (endLongitude - startLongitude).abs();
+
+    return [distanceLatitude, distanceLongitude];
+  }
+
+  void _calculateDistance() {
+    if (_startLatitude.isNotEmpty && _startLongitude.isNotEmpty && _endLatitude.isNotEmpty && _endLongitude.isNotEmpty) {
+      double startLat = double.parse(_startLatitude);
+      double startLng = double.parse(_startLongitude);
+      double endLat = double.parse(_endLatitude);
+      double endLng = double.parse(_endLongitude);
+
+      List<double> distances = distance(startLat, startLng, endLat, endLng);
+
+      setState(() {
+        _distanceMessage = 'Latitude Distance: ${distances[0]}, Longitude Distance: ${distances[1]}';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text('Location Search'),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _startController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.blue[100],
+                      hintText: '출발 지점을 입력해주세요.',
+                    ),
+                  ),
+                ),
+                Container(
+                  color: Colors.blue[100],
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconButton(
+                      onPressed: () => _searchLocation(_startController.text, true),
+                      icon: Icon(
+                        Icons.search,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            SizedBox(height: 20),
+            Text('출발 위치: $_startLocation'),
+            Text('위도: $_startLatitude'),
+            Text('경도: $_startLongitude'),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _endController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.blue[100],
+                      hintText: '도착 지점을 입력해주세요.',
+                    ),
+                  ),
+                ),
+                Container(
+                  color: Colors.blue[100],
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconButton(
+                      onPressed: () => _searchLocation(_endController.text, false),
+                      icon: Icon(
+                        Icons.search,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
+            SizedBox(height: 20),
+            Text('도착 위치: $_endLocation'),
+            Text('위도: $_endLatitude'),
+            Text('경도: $_endLongitude'),
+            SizedBox(height: 20),
+            Text(_distanceMessage),
+
+            TextButton(onPressed: () => {Navigator.of(context).push(MaterialPageRoute(builder: (context) => Foodlist()))}, child: Text("화면 이동"))
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
