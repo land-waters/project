@@ -111,6 +111,10 @@ class _LocationSearchState extends State<LocationSearch> {
       });
     }
   }
+  
+  bool _isButtonEnabled() {
+    return _startLatitude.isNotEmpty && _startLongitude.isNotEmpty && _endLatitude.isNotEmpty && _endLongitude.isNotEmpty;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +194,13 @@ class _LocationSearchState extends State<LocationSearch> {
             SizedBox(height: 20),
             Text(_distanceMessage),
 
-            TextButton(onPressed: () => {Navigator.of(context).push(MaterialPageRoute(builder: (context) => Foodlist()))}, child: Text("화면 이동"))
+      
+            TextButton(onPressed: _isButtonEnabled() ? () => {Navigator.of(context).push(MaterialPageRoute(builder: (context) => Foodlist(
+              startLat: double.parse(_startLatitude),
+              startLng: double.parse(_startLongitude),
+              endLat: double.parse(_endLatitude),
+              endLng: double.parse(_endLongitude),
+        ),))} : null , child: Text("화면 이동"), )
           ],
         ),
       ),
