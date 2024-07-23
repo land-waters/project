@@ -59,7 +59,8 @@ class _FoodlistState extends State<Foodlist> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("음식점 리스트"),
+        title: const Text("Restaurant List"),
+        backgroundColor: Colors.blue[200],
       ),
       body: FutureBuilder(
         future: _service.fetchData(),

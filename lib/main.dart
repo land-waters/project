@@ -136,6 +136,7 @@ class _LocationSearchState extends State<LocationSearch> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Location Search'),
+        backgroundColor: Colors.blue[200],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
