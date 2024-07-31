@@ -6,12 +6,13 @@ import 'package:project/locator/locator.dart';
 import 'dart:math';
 
 class Foodlist extends StatefulWidget {
+  final String startAddress;
   final double startLat;
   final double startLng;
   final double endLat;
   final double endLng;
 
-  const Foodlist({super.key, required this.startLat, required this.startLng, required this.endLat, required this.endLng});
+  const Foodlist({super.key, required this.startAddress, required this.startLat, required this.startLng, required this.endLat, required this.endLng});
 
   @override
   State<Foodlist> createState() => _FoodlistState();
@@ -91,13 +92,25 @@ class _FoodlistState extends State<Foodlist> {
                               onPressed: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => FoodDetail(food: filteredAndSortedList[index]),
+                                    builder: (context) => FoodDetail(
+                                      startAddress: widget.startAddress,
+                                      startLat: widget.startLat,
+                                      startLng: widget.startLng,
+                                      food: filteredAndSortedList[index]),
                                   ),
                                 );
                               },
                               child: Text("Detail"),
+                              style: TextButton.styleFrom(
+                                side: BorderSide(
+                                  color: Colors.blue
+                                )
+                              ),
                             ),
-                            TextButton(onPressed: () {}, child: Text("즐겨찾기 기능 예정")),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text("위치 : ${filteredAndSortedList[index].REFINE_ROADNM_ADDR.toString()}"),
+                            )
                           ],
                         ),
                       ],

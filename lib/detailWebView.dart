@@ -12,8 +12,24 @@ class DetailWebView extends StatelessWidget {
         title: Text(restaurant),
         backgroundColor: Colors.blue,
       ),
-      body: InAppWebView(
-        initialUrlRequest: URLRequest(url: WebUri('https://map.naver.com/p/search/$restaurant')),
+      body: Column(
+        children: [
+          Expanded(
+            child: InAppWebView(
+              initialUrlRequest: URLRequest(url: WebUri('https://map.naver.com/p/search/$restaurant')),
+            ),
+          ),
+          Row(
+            children: [
+              Padding(padding: EdgeInsets.all(8),
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text("뒤로 가기"),
+              ),),
+            ],
+          )
+          
+        ],
       ),
     );
   }

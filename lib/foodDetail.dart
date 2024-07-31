@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:project/model/foodData.dart';
+import 'package:project/roadGuide.dart';
 import 'detailWebView.dart';
 
 class FoodDetail extends StatelessWidget {
+  final String startAddress;
+  final double startLat;
+  final double startLng;
   final foodData food;
-  FoodDetail({required this.food});
+  FoodDetail({required this.startAddress,required this.startLat, required this.startLng, required this.food});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +26,11 @@ class FoodDetail extends StatelessWidget {
 
             SizedBox(height: 30,),
 
-            TextButton(onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => DetailWebView(restaurant: food.RESTRT_NM.toString(),))), child: Text("해당 음식점의 자세한 정보 보기 (네이버 지도)"))
+            ElevatedButton(onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => DetailWebView(restaurant: food.REFINE_ROADNM_ADDR.toString()))), child: Text("해당 음식점의 자세한 정보 보기 (네이버 지도)")),
+            ElevatedButton(onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => RoadGuide(startAddress: startAddress, endAddress: food.REFINE_ROADNM_ADDR.toString(), startLat: startLat.toString(), startLng: startLng.toString(), endLat: food.REFINE_WGS84_LAT.toString(), endLng: food.REFINE_WGS84_LOGT.toString()))
+            ), child: Text("해당 지점으로 이동하기"))
           ],
         ));
   }

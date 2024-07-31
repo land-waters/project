@@ -43,6 +43,9 @@ dependencies:
   webview_flutter_android:
   webview_flutter_wkwebview:
   flutter_inappwebview:
+  kpostal: 
+  geolocator: 
+  geocoding: 
 
 dev_dependencies:
   flutter_test:
