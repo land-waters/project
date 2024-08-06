@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:kpostal/kpostal.dart';
+import 'package:project/direction.dart';
 import 'package:project/foodList.dart';
 import 'package:project/locator/locator.dart';
 
@@ -85,7 +86,7 @@ class _LocationSearchState extends State<LocationSearch> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Location Search'),
+        title: Text('가다 뭐먹지?'),
         backgroundColor: Colors.blue[200],
       ),
       body: Padding(
@@ -234,7 +235,7 @@ class _LocationSearchState extends State<LocationSearch> {
                   : null,
               child: Text(
                 _isButtonEnabled()
-                    ? "${_startLocation}에서 ${_endLocation} 사이에 있는 맛집 보러가기"
+                    ? "출발 지점과 도착 지점 사이에 있는 맛집 보러가기"
                     : "출발 지점과 도착 지점을 설정해주세요",
               ),
               style: TextButton.styleFrom(
@@ -243,6 +244,9 @@ class _LocationSearchState extends State<LocationSearch> {
                     borderRadius: BorderRadius.circular(8),
                   )),
             ),
+            ElevatedButton(onPressed: () => {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DirectionsAndRestaurantsScreen(startAddress: _startController.text,startLat: double.parse(_startLatitude), startLng: double.parse(_startLongitude), endLat: double.parse(_endLatitude), endLng: double.parse(_endLongitude))))
+            }, child: Text("구글 경로 "))
           ],
         ),
       ),
