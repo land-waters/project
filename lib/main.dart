@@ -245,7 +245,7 @@ class _LocationSearchState extends State<LocationSearch> {
                   )),
             ),
             ElevatedButton(onPressed: () => {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DirectionsAndRestaurantsScreen(startAddress: _startController.text,startLat: double.parse(_startLatitude), startLng: double.parse(_startLongitude), endLat: double.parse(_endLatitude), endLng: double.parse(_endLongitude))))
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DirectionsAndRestaurantsScreen(startAddress: _startController.text,startLat: double.parse(_startLatitude), startLng: double.parse(_startLongitude), endLat: double.parse(_endLatitude), endLng: double.parse(_endLongitude), endAddress: _endController.text)))
             }, child: Text("구글 경로 "))
           ],
         ),
