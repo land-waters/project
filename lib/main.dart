@@ -82,6 +82,7 @@ class _LocationSearchState extends State<LocationSearch> {
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,6 +94,48 @@ class _LocationSearchState extends State<LocationSearch> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Container(
+  padding: EdgeInsets.all(16.0), // 내부 여백 추가
+  decoration: BoxDecoration(
+    color: Colors.white, // 배경색 설정
+    borderRadius: BorderRadius.circular(12.0), // 모서리 둥글게
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black26, // 그림자 색상
+        offset: Offset(0, 4), // 그림자 위치
+        blurRadius: 8.0, // 그림자 흐림 정도
+      ),
+    ],
+    border: Border.all(
+      color: Colors.blueAccent, // 테두리 색상
+      width: 2.0, // 테두리 두께
+    ),
+  ),
+  child: SizedBox(
+    width: MediaQuery.of(context).size.width * 0.9,
+    height: MediaQuery.of(context).size.height * 0.3,
+    child: Text(
+      "1. 출발지와 도착지를 입력합니다.\n"
+      "2. '음식점 찾기' 버튼을 눌러 지도를 불러옵니다.\n"
+      "3. 출발지와 도착지 사이의 음식점 핀을 클릭하여 간단한 정보를 볼 수 있습니다.\n"
+      "4. '정보 보기' 버튼을 눌러 해당 식당의 상세정보를 볼 수 있습니다.\n"
+      "5. 상세 정보에는 리뷰가 포함되어 있습니다.\n (최대 5개까지만 불러옵니다.)\n"
+      "6. 더 많은 리뷰를 원하시면 '리뷰 더보기'를 이용하여 보실 수 있습니다.\n",
+      style: TextStyle(
+        fontSize: 16.0, // 글자 크기
+        color: const Color.fromARGB(255, 49, 43, 43), // 글자 색상
+      ),
+    ),
+  ),
+)
+,
+SizedBox(
+  height: 30,
+),
+Container(
+  alignment: Alignment.center,
+  child: Text("출발지 입력"),
+),
             Row(
               children: [
                 Expanded(
@@ -145,7 +188,7 @@ class _LocationSearchState extends State<LocationSearch> {
                       ),
                     )
                   },
-                  icon: Icon(Icons.search, size: 20),
+                  icon: Icon(Icons.search, size: 40),
                   style: IconButton.styleFrom(
                       side: BorderSide(color: Colors.blue, width: 2),
                       shape: RoundedRectangleBorder(
@@ -154,7 +197,6 @@ class _LocationSearchState extends State<LocationSearch> {
               ],
             ),
             SizedBox(height: 20),
-            Text('출발 위치: $_startLocation'),
             SizedBox(height: 20),
             Row(
               children: [
@@ -208,7 +250,7 @@ class _LocationSearchState extends State<LocationSearch> {
                       ),
                     )
                   },
-                  icon: Icon(Icons.search, size: 20),
+                  icon: Icon(Icons.search, size: 40),
                   style: IconButton.styleFrom(
                       side: BorderSide(color: Colors.blue, width: 2),
                       shape: RoundedRectangleBorder(
@@ -216,37 +258,19 @@ class _LocationSearchState extends State<LocationSearch> {
                 ),
               ],
             ),
-            SizedBox(height: 20),
-            Text('도착 위치: $_endLocation'),
-            SizedBox(height: 20),
             Text(_distanceMessage),
-            TextButton(
-              onPressed: _isButtonEnabled()
-                  ? () {
+            ElevatedButton(
+                onPressed: () => {
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => Foodlist(
-                                startAddress: _startController.text,
-                                startLat: double.parse(_startLatitude),
-                                startLng: double.parse(_startLongitude),
-                                endLat: double.parse(_endLatitude),
-                                endLng: double.parse(_endLongitude),
-                              )));
-                    }
-                  : null,
-              child: Text(
-                _isButtonEnabled()
-                    ? "출발 지점과 도착 지점 사이에 있는 맛집 보러가기"
-                    : "출발 지점과 도착 지점을 설정해주세요",
-              ),
-              style: TextButton.styleFrom(
-                  side: BorderSide(color: Colors.blue, width: 2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  )),
-            ),
-            ElevatedButton(onPressed: () => {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DirectionsAndRestaurantsScreen(startAddress: _startController.text,startLat: double.parse(_startLatitude), startLng: double.parse(_startLongitude), endLat: double.parse(_endLatitude), endLng: double.parse(_endLongitude), endAddress: _endController.text)))
-            }, child: Text("구글 경로 "))
+                          builder: (context) => DirectionsAndRestaurantsScreen(
+                              startAddress: _startController.text,
+                              startLat: double.parse(_startLatitude),
+                              startLng: double.parse(_startLongitude),
+                              endLat: double.parse(_endLatitude),
+                              endLng: double.parse(_endLongitude),
+                              endAddress: _endController.text)))
+                    },
+                child: Text("음식점 찾기"))
           ],
         ),
       ),

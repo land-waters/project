@@ -7,6 +7,7 @@ import 'dart:convert';
 
 import 'package:project/detailWebView.dart';
 import 'package:project/roadGuide.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DirectionsAndRestaurantsScreen extends StatefulWidget {
   final String startAddress;
@@ -15,7 +16,6 @@ class DirectionsAndRestaurantsScreen extends StatefulWidget {
   final double startLng;
   final double endLat;
   final double endLng;
-  
 
   const DirectionsAndRestaurantsScreen({
     Key? key,
@@ -28,31 +28,36 @@ class DirectionsAndRestaurantsScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _DirectionsAndRestaurantsScreenState createState() => _DirectionsAndRestaurantsScreenState();
+  _DirectionsAndRestaurantsScreenState createState() =>
+      _DirectionsAndRestaurantsScreenState();
 }
 
-class _DirectionsAndRestaurantsScreenState extends State<DirectionsAndRestaurantsScreen> with SingleTickerProviderStateMixin {
+class _DirectionsAndRestaurantsScreenState
+    extends State<DirectionsAndRestaurantsScreen>
+    with SingleTickerProviderStateMixin {
   late GoogleMapController _mapController;
   late LatLng _secondpoint;
   late LatLng _firstpoint;
   late LatLng _thirdpoint;
   List<dynamic> _restaurants = [];
   late TabController _tabController;
-  BitmapDescriptor? _startIcon;
-  BitmapDescriptor? _endIcon;
-  BitmapDescriptor? _restaurantIcon;
+  String? _selectedPoint;
 
   @override
   void initState() {
     super.initState();
-    _secondpoint = getMidpoint(widget.startLat, widget.startLng, widget.endLat, widget.endLng);
-    _firstpoint = getMidpoint(widget.startLat, widget.startLng, _secondpoint.latitude, _secondpoint.longitude);
-    _thirdpoint = getMidpoint(_secondpoint.latitude, _secondpoint.longitude, widget.endLat, widget.endLng);
+    _secondpoint = getMidpoint(
+        widget.startLat, widget.startLng, widget.endLat, widget.endLng);
+    _firstpoint = getMidpoint(widget.startLat, widget.startLng,
+        _secondpoint.latitude, _secondpoint.longitude);
+    _thirdpoint = getMidpoint(_secondpoint.latitude, _secondpoint.longitude,
+        widget.endLat, widget.endLng);
     _fetchNearbyRestaurants();
     _tabController = TabController(length: 2, vsync: this);
   }
 
-  LatLng getMidpoint(double startLat, double startLng, double endLat, double endLng) {
+  LatLng getMidpoint(
+      double startLat, double startLng, double endLat, double endLng) {
     final lat1 = startLat * pi / 180;
     final lon1 = startLng * pi / 180;
     final lat2 = endLat * pi / 180;
@@ -63,33 +68,33 @@ class _DirectionsAndRestaurantsScreenState extends State<DirectionsAndRestaurant
     final Bx = cos(lat2) * cos(dLon);
     final By = cos(lat2) * sin(dLon);
 
-    final lat3 = atan2(
-      sin(lat1) + sin(lat2),
-      sqrt(
-        (cos(lat1) + Bx) * (cos(lat1) + Bx) + By * By
-      )
-    );
+    final lat3 = atan2(sin(lat1) + sin(lat2),
+        sqrt((cos(lat1) + Bx) * (cos(lat1) + Bx) + By * By));
     final lon3 = lon1 + atan2(By, cos(lat1) + Bx);
 
     return LatLng(lat3 * 180 / pi, lon3 * 180 / pi);
   }
 
   Future<void> _fetchNearbyRestaurants() async {
-    final apiKey = 'AIzaSyDMKs41kiiacK9CNt_nNEZXkv0gwoVC36Y'; // 환경변수로 API 키를 처리하는 것이 좋습니다
+    final apiKey =
+        'AIzaSyDMKs41kiiacK9CNt_nNEZXkv0gwoVC36Y'; // 환경변수로 API 키를 처리하는 것이 좋습니다
     final radius = 5000; // 5km radius
-    final firstUrl = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+    final firstUrl =
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
         '?location=${_firstpoint.latitude},${_firstpoint.longitude}'
         '&radius=$radius'
         '&type=restaurant'
         '&language=ko'
         '&key=$apiKey';
-    final secondUrl = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+    final secondUrl =
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
         '?location=${_secondpoint.latitude},${_secondpoint.longitude}'
         '&radius=$radius'
         '&type=restaurant'
         '&language=ko'
         '&key=$apiKey';
-    final thirdUrl = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+    final thirdUrl =
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
         '?location=${_thirdpoint.latitude},${_thirdpoint.longitude}'
         '&radius=$radius'
         '&type=restaurant'
@@ -100,7 +105,9 @@ class _DirectionsAndRestaurantsScreenState extends State<DirectionsAndRestaurant
     final secondResponse = await http.get(Uri.parse(secondUrl));
     final thirdResponse = await http.get(Uri.parse(thirdUrl));
 
-    if (firstResponse.statusCode == 200 && secondResponse.statusCode == 200 && thirdResponse.statusCode == 200) {
+    if (firstResponse.statusCode == 200 &&
+        secondResponse.statusCode == 200 &&
+        thirdResponse.statusCode == 200) {
       final firstData = jsonDecode(firstResponse.body);
       final secondData = jsonDecode(secondResponse.body);
       final thirdData = jsonDecode(thirdResponse.body);
@@ -129,8 +136,8 @@ class _DirectionsAndRestaurantsScreenState extends State<DirectionsAndRestaurant
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Restaurants'),
             Tab(text: 'Map'),
+            Tab(text: 'List'),
           ],
         ),
       ),
@@ -138,42 +145,49 @@ class _DirectionsAndRestaurantsScreenState extends State<DirectionsAndRestaurant
         physics: NeverScrollableScrollPhysics(),
         controller: _tabController,
         children: [
-          Stack(
-            children: [
-              _buildMapView(),
-              Positioned(
+          Stack(children: [
+            _buildMapView(),
+            Positioned(
                 top: 10,
                 right: 10,
-                child: Column(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => _moveToPosition(LatLng(widget.startLat,widget.startLng)),
-                      child: Text('출발지'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _moveToPosition(_firstpoint),
-                      child: Text('첫번째 지점'),
-                    ),
-                    SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () => _moveToPosition(_secondpoint),
-                      child: Text('두번째 지점'),
-                    ),
-                    SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () => _moveToPosition(_thirdpoint),
-                      child: Text('세번째 지점'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _moveToPosition(LatLng(widget.endLat, widget.endLng)),
-                      child: Text('도착지'),
-                    ),
-                  ],
-                ),
-              )
-            ]
-          ),
-           _buildRestaurantsList(),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white10, // 드롭다운 버튼 배경색
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButton<String>(
+                    value: _selectedPoint,
+                    hint: Text('지점을 선택하세요'),
+                    icon: Icon(Icons.arrow_drop_down, color: Colors.black),
+                    underline: Container(),
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                    items: <String>['첫번째 지점', '두번째 지점', '세번째 지점']
+                        .map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedPoint = newValue;
+                        if (newValue == '첫번째 지점') {
+                          _moveToPosition(_firstpoint);
+                        } else if (newValue == '두번째 지점') {
+                          _moveToPosition(_secondpoint);
+                        } else if (newValue == '세번째 지점') {
+                          _moveToPosition(_thirdpoint);
+                        }
+                      });
+                    },
+                  ),
+                ))
+          ]),
+          _buildRestaurantsList(),
         ],
       ),
     );
@@ -190,8 +204,7 @@ class _DirectionsAndRestaurantsScreenState extends State<DirectionsAndRestaurant
               restaurant['name'],
               style: TextStyle(fontSize: 20),
             ),
-            subtitle: Text(
-                "도로명 주소: ${restaurant['vicinity']}"),
+            subtitle: Text("도로명 주소: ${restaurant['vicinity']}"),
             children: <Widget>[
               Padding(
                 padding: EdgeInsets.all(16.0),
@@ -212,10 +225,8 @@ class _DirectionsAndRestaurantsScreenState extends State<DirectionsAndRestaurant
                         TextButton(
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => DetailWebView(
-                                restaurant: restaurant['vicinity']
-                              )
-                            ),
+                                builder: (context) => DetailWebView(
+                                    restaurant: restaurant['vicinity'])),
                           ),
                           child: Text("정보 보기"),
                           style: TextButton.styleFrom(
@@ -227,13 +238,16 @@ class _DirectionsAndRestaurantsScreenState extends State<DirectionsAndRestaurant
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => RoadGuide(
-                                startAddress: widget.startAddress,
-                                endAddress: restaurant['vicinity'],
-                                startLat: widget.startLat.toString(),
-                                startLng: widget.startLng.toString(),
-                                endLat: restaurant['geometry']['location']['lat'].toString(),
-                                endLng: restaurant['geometry']['location']['lng'].toString()
-                              ),
+                                  startAddress: widget.startAddress,
+                                  endAddress: restaurant['vicinity'],
+                                  startLat: widget.startLat.toString(),
+                                  startLng: widget.startLng.toString(),
+                                  endLat: restaurant['geometry']['location']
+                                          ['lat']
+                                      .toString(),
+                                  endLng: restaurant['geometry']['location']
+                                          ['lng']
+                                      .toString()),
                             ),
                           ),
                           child: Text("경로 찾기"),
@@ -254,133 +268,191 @@ class _DirectionsAndRestaurantsScreenState extends State<DirectionsAndRestaurant
   }
 
   Widget _buildMapView() {
-
-    return GoogleMap(
-      initialCameraPosition: CameraPosition(
-        target: LatLng(_firstpoint.latitude, _firstpoint.longitude),
-        zoom: 12,
-      ),
-      markers: {Marker(
+  return GoogleMap(
+    initialCameraPosition: CameraPosition(
+      target: LatLng(_firstpoint.latitude, _firstpoint.longitude),
+      zoom: 12,
+    ),
+    markers: {
+      Marker(
         markerId: MarkerId(widget.startAddress),
-        position: LatLng(widget.startLat, widget.startLng), 
-        icon: AssetMapBitmap("assets/images/start_point.png",width: 48,height: 48),
+        position: LatLng(widget.startLat, widget.startLng),
+        icon: AssetMapBitmap("assets/images/start_point.png", width: 48, height: 48),
         infoWindow: InfoWindow(
           title: "출발지",
           snippet: widget.startAddress,
-
         ),
-        ),
-        Marker(
+      ),
+      Marker(
         markerId: MarkerId(widget.endAddress),
         position: LatLng(widget.endLat, widget.endLng),
-        icon: AssetMapBitmap("assets/images/end_point.png",width: 48,height: 48 ),
+        icon: AssetMapBitmap("assets/images/end_point.png", width: 48, height: 48),
         infoWindow: InfoWindow(
           title: "도착지",
           snippet: widget.endAddress,
         ),
-        ), 
-        ..._restaurants.map((restaurant) {
+      ),
+      ..._restaurants.where((restaurant) => restaurant['business_status'] == 'OPERATIONAL').map((restaurant) {
         return Marker(
           markerId: MarkerId(restaurant['place_id']),
           position: LatLng(restaurant['geometry']['location']['lat'], restaurant['geometry']['location']['lng']),
-          icon: AssetMapBitmap("assets/images/restaurant.png",width: 48,height: 48),
+          icon: AssetMapBitmap("assets/images/restaurant.png", width: 48, height: 48),
           infoWindow: InfoWindow(
             title: restaurant['name'],
             snippet: restaurant['vicinity'],
           ),
-          onTap: () => _onMarkerTapped(restaurant)
+          onTap: () => _onMarkerTapped(restaurant),
         );
       }).toSet(),
-      },
-      onMapCreated: (controller) {
-        _mapController = controller;
-      },
-    );
-  }
-  void _moveToPosition(LatLng position) {
-    _mapController.animateCamera(CameraUpdate.newLatLng(position));
-  }
-  void _onMarkerTapped(Map<String, dynamic> restaurant) {
-    Map<String, dynamic> _selectedRestaurant = {};  // 상태 변수 추가
-
-  setState(() {
-    _selectedRestaurant = restaurant;
-  });
-  showModalBottomSheet(
-    context: context,
-    builder: (context) {
-      return Container(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              "음식점 이름 : ${restaurant['name']}",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              "도로명 주소 : ${restaurant['vicinity']}",
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 8),
-            if (restaurant.containsKey('rating')) 
-              Text("음식점 평점 : ${restaurant['rating']}"),
-            if (restaurant.containsKey('user_ratings_total')) 
-              Text("평점 수 : ${restaurant['user_ratings_total']}"),
-            if (restaurant.containsKey('price_level')) 
-              Text("가격 수준 : ${restaurant['price_level']}"),
-            if (restaurant.containsKey('business_status')) 
-              Text("영업 상태 : ${restaurant['business_status']}"),
-            if (restaurant['photos'] != null && restaurant['photos'].isNotEmpty)
-  Image.network(
-    'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${restaurant['photos'][0]['photo_reference']}&key=AIzaSyDMKs41kiiacK9CNt_nNEZXkv0gwoVC36Y',
-    width: 300, // 원하는 너비로 설정
-    height: 200, // 원하는 높이로 설정
-    fit: BoxFit.cover, // 이미지를 어떻게 맞출지 설정 (옵션)
-  ),
-
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => DetailView(restaurant: _selectedRestaurant),
-                    ),
-                  ),
-                  child: Text("정보 보기"),
-                  style: TextButton.styleFrom(
-                    side: BorderSide(color: Colors.blue),
-                  ),
-                ),
-                SizedBox(width: 10),
-                TextButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => RoadGuide(
-                        startAddress: widget.startAddress,
-                        endAddress: restaurant['vicinity'],
-                        startLat: widget.startLat.toString(),
-                        startLng: widget.startLng.toString(),
-                        endLat: restaurant['geometry']['location']['lat'].toString(),
-                        endLng: restaurant['geometry']['location']['lng'].toString(),
-                      ),
-                    ),
-                  ),
-                  child: Text("경로 찾기"),
-                  style: TextButton.styleFrom(
-                    side: BorderSide(color: Colors.blue),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
+    },
+    onMapCreated: (controller) {
+      _mapController = controller;
     },
   );
 }
 
 
+  void _moveToPosition(LatLng position) {
+    _mapController.animateCamera(CameraUpdate.newLatLng(position));
+  }
+
+  void _onMarkerTapped(Map<String, dynamic> restaurant) {
+    Map<String, dynamic> _selectedRestaurant = {}; 
+
+    setState(() {
+      _selectedRestaurant = restaurant;
+    });
+   showModalBottomSheet(
+  context: context,
+  backgroundColor: Colors.transparent, // 배경을 투명하게 설정하여 모서리 둥근 효과를 강조
+  builder: (context) {
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10.0, 
+            spreadRadius: 2.0, 
+            offset: Offset(0, 4), 
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                restaurant['name'],
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87, // 글자 색상
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(), // 닫기 버튼 추가
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          if (restaurant['photos'] != null && restaurant['photos'].isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12.0), // 이미지 모서리를 둥글게
+              child: Image.network(
+                'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${restaurant['photos'][0]['photo_reference']}&key=AIzaSyDMKs41kiiacK9CNt_nNEZXkv0gwoVC36Y',
+                width: double.infinity, // 화면 너비에 맞게 설정
+                height: 200,
+                fit: BoxFit.cover, // 이미지 비율 유지하며 맞춤
+              ),
+            ),
+          SizedBox(height: 8),
+          Text(
+            "도로명 주소 : ${restaurant['vicinity']}",
+            style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+          ),
+          SizedBox(height: 8),
+          if (restaurant.containsKey('rating'))
+            Row(
+              children: [
+                Icon(Icons.star, color: Colors.orangeAccent),
+                SizedBox(width: 4),
+                Text(
+                  "음식점 평점: ${restaurant['rating']}",
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                ),
+              ],
+            ),
+          if (restaurant.containsKey('user_ratings_total'))
+            Text(
+              "평점 수 : ${restaurant['user_ratings_total']}",
+              style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+            ),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly, // 버튼 간격 균등하게
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => DetailView(
+                      restaurant: _selectedRestaurant,
+                      startAddress: widget.startAddress,
+                      startLat: widget.startLat,
+                      startLng: widget.startLng,
+                    ),
+                  ),
+                ),
+                icon: Icon(Icons.info_outline),
+                label: Text("정보 보기"),
+                style: ElevatedButton.styleFrom(
+                
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => RoadGuide(
+                      startAddress: widget.startAddress,
+                      endAddress: restaurant['vicinity'],
+                      startLat: widget.startLat.toString(),
+                      startLng: widget.startLng.toString(),
+                      endLat: restaurant['geometry']['location']['lat']
+                          .toString(),
+                      endLng: restaurant['geometry']['location']['lng']
+                          .toString(),
+                    ),
+                  ),
+                ),
+                icon: Icon(Icons.directions),
+                label: Text("경로 찾기"),
+                style: ElevatedButton.styleFrom(
+              
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  },
+);
+
+
+  }
 }

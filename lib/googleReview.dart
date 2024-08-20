@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-class DetailWebView extends StatelessWidget {
+class Googlereview extends StatelessWidget {
   final String restaurant;
-  DetailWebView({required this.restaurant});
+  final String place_id;
+  Googlereview({required this.restaurant,required this.place_id});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,7 @@ class DetailWebView extends StatelessWidget {
         children: [
           Expanded(
             child: InAppWebView(
-              initialUrlRequest: URLRequest(url: WebUri('https://map.naver.com/p/search/${restaurant}/?c=15.00,0,0,0,dh&placePath=/review')),
+              initialUrlRequest: URLRequest(url: WebUri('https://www.google.com/maps/place/?q=place_id:${place_id}')),
             ),
           ),
           SizedBox(
