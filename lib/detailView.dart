@@ -91,7 +91,7 @@ class _DetailViewState extends State<DetailView> {
                     "평점: ${widget.restaurant['rating']} , 평점 참여자 : ${widget.restaurant['user_ratings_total']}",
                     style: TextStyle(fontSize: 16),
                   ),
-                  SizedBox(height: 16),
+                  
                   TextButton(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(

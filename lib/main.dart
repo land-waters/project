@@ -134,6 +134,7 @@ SizedBox(
 ),
 Container(
   alignment: Alignment.center,
+  
   child: Text("출발지 입력"),
 ),
             Row(
