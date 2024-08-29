@@ -28,6 +28,7 @@ class _DetailViewState extends State<DetailView> {
     super.initState();
     _fetchPlaceDetails(widget.restaurant['place_id']);
   }
+  
 
   Future<void> _fetchPlaceDetails(String placeId) async {
     final apiKey = 'AIzaSyDMKs41kiiacK9CNt_nNEZXkv0gwoVC36Y';
@@ -53,8 +54,8 @@ class _DetailViewState extends State<DetailView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.restaurant['name']),
-        backgroundColor: Colors.blue,
+        title: Text(widget.restaurant['name'], style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.yellow,
       ),
       body: SingleChildScrollView(
         child: Column(

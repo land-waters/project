@@ -1,11 +1,11 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:kpostal/kpostal.dart';
 import 'package:project/direction.dart';
 import 'package:project/foodList.dart';
 import 'package:project/locator/locator.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   initLocator();
@@ -18,9 +18,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: LocationSearch(),
       theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          fontFamily: "POP"),
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.yellowAccent),
+        fontFamily: "POP",
+      ),
     );
   }
 }
@@ -63,6 +64,48 @@ class _LocationSearchState extends State<LocationSearch> {
     return R * c;
   }
 
+  Future<void> _getCurrentLocationAndAddress() async {
+    try {
+      // Google Geolocation API 요청
+      final String apiKey = 'AIzaSyDMKs41kiiacK9CNt_nNEZXkv0gwoVC36Y';
+      final String geolocationUrl =
+          'https://www.googleapis.com/geolocation/v1/geolocate?key=$apiKey';
+
+      final locationResponse = await http.post(Uri.parse(geolocationUrl));
+
+      if (locationResponse.statusCode == 200) {
+        Map<String, dynamic> locationData = json.decode(locationResponse.body);
+        double lat = locationData['location']['lat'];
+        double lng = locationData['location']['lng'];
+
+        // Google Geocoding API 요청 (위도, 경도 -> 도로명 주소)
+        final String geocodeUrl =
+            'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey&language=ko';
+
+        final geocodeResponse = await http.get(Uri.parse(geocodeUrl));
+
+        if (geocodeResponse.statusCode == 200) {
+          Map<String, dynamic> geocodeData = json.decode(geocodeResponse.body);
+          String address = geocodeData['results'][0]['formatted_address'];
+
+          setState(() {
+            _startController.text = address;
+            _startLocation = address;
+            _startLatitude = lat.toString();
+            _startLongitude = lng.toString();
+            _calculateDistance();
+          });
+        } else {
+          print('Failed to get address.');
+        }
+      } else {
+        print('Failed to get location.');
+      }
+    } catch (e) {
+      print("Error occurred while getting location: $e");
+    }
+  }
+
   void _calculateDistance() {
     if (_startLatitude.isNotEmpty &&
         _startLongitude.isNotEmpty &&
@@ -88,55 +131,19 @@ class _LocationSearchState extends State<LocationSearch> {
     return Scaffold(
       appBar: AppBar(
         title: Text('가다 뭐먹지?'),
-        backgroundColor: Colors.blue[200],
+        backgroundColor: Colors.yellowAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            SizedBox(
+              height: 30,
+            ),
             Container(
-  padding: EdgeInsets.all(16.0), // 내부 여백 추가
-  decoration: BoxDecoration(
-    color: Colors.white, // 배경색 설정
-    borderRadius: BorderRadius.circular(12.0), // 모서리 둥글게
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black26, // 그림자 색상
-        offset: Offset(0, 4), // 그림자 위치
-        blurRadius: 8.0, // 그림자 흐림 정도
-      ),
-    ],
-    border: Border.all(
-      color: Colors.blueAccent, // 테두리 색상
-      width: 2.0, // 테두리 두께
-    ),
-  ),
-  child: SizedBox(
-    width: MediaQuery.of(context).size.width * 0.9,
-    height: MediaQuery.of(context).size.height * 0.3,
-    child: Text(
-      "1. 출발지와 도착지를 입력합니다.\n"
-      "2. '음식점 찾기' 버튼을 눌러 지도를 불러옵니다.\n"
-      "3. 출발지와 도착지 사이의 음식점 핀을 클릭하여 간단한 정보를 볼 수 있습니다.\n"
-      "4. '정보 보기' 버튼을 눌러 해당 식당의 상세정보를 볼 수 있습니다.\n"
-      "5. 상세 정보에는 리뷰가 포함되어 있습니다.\n (최대 5개까지만 불러옵니다.)\n"
-      "6. 더 많은 리뷰를 원하시면 '리뷰 더보기'를 이용하여 보실 수 있습니다.\n",
-      style: TextStyle(
-        fontSize: 16.0, // 글자 크기
-        color: const Color.fromARGB(255, 49, 43, 43), // 글자 색상
-      ),
-    ),
-  ),
-)
-,
-SizedBox(
-  height: 30,
-),
-Container(
-  alignment: Alignment.center,
-  
-  child: Text("출발지 입력"),
-),
+              alignment: Alignment.center,
+              child: Text("출발지 입력"),
+            ),
             Row(
               children: [
                 Expanded(
@@ -145,26 +152,26 @@ Container(
                     controller: _startController,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Colors.white10,
                       hintText: '출발지를 설정해주세요.',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(
-                          color: Colors.blue,
+                          color: Colors.yellow,
                           width: 2,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(
-                          color: Colors.blue,
+                          color: Colors.yellow,
                           width: 2,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(
-                          color: Colors.blue,
+                          color: Colors.yellow,
                           width: 2,
                         ),
                       ),
@@ -172,32 +179,19 @@ Container(
                   ),
                 ),
                 IconButton(
-                  onPressed: () => {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return KpostalView(callback: (Kpostal result) {
-                            _startController.text = result.address;
-                            setState(() {
-                              _startLocation = result.roadAddress;
-                              _startLatitude = result.latitude.toString();
-                              _startLongitude = result.longitude.toString();
-                              _calculateDistance();
-                            });
-                          });
-                        },
-                      ),
-                    )
+                  onPressed: () async {
+                    await _getCurrentLocationAndAddress();
                   },
-                  icon: Icon(Icons.search, size: 40),
+                  icon: Icon(Icons.my_location, size: 40),
                   style: IconButton.styleFrom(
-                      side: BorderSide(color: Colors.blue, width: 2),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8))),
+                    side: BorderSide(color: Colors.yellow, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ],
             ),
-            SizedBox(height: 20),
             SizedBox(height: 20),
             Row(
               children: [
@@ -253,25 +247,33 @@ Container(
                   },
                   icon: Icon(Icons.search, size: 40),
                   style: IconButton.styleFrom(
-                      side: BorderSide(color: Colors.blue, width: 2),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8))),
+                    side: BorderSide(color: Colors.blue, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ],
             ),
             Text(_distanceMessage),
             ElevatedButton(
-                onPressed: () => {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => DirectionsAndRestaurantsScreen(
-                              startAddress: _startController.text,
-                              startLat: double.parse(_startLatitude),
-                              startLng: double.parse(_startLongitude),
-                              endLat: double.parse(_endLatitude),
-                              endLng: double.parse(_endLongitude),
-                              endAddress: _endController.text)))
-                    },
-                child: Text("음식점 찾기"))
+              onPressed: () => {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => DirectionsAndRestaurantsScreen(
+                    startAddress: _startController.text,
+                    startLat: double.parse(_startLatitude),
+                    startLng: double.parse(_startLongitude),
+                    endLat: double.parse(_endLatitude),
+                    endLng: double.parse(_endLongitude),
+                    endAddress: _endController.text,
+                  ),
+                ))
+              },
+              child: Text(
+                "음식점 찾기",
+                style: TextStyle(color: Colors.black),
+              ),
+            )
           ],
         ),
       ),
