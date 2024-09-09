@@ -211,7 +211,7 @@
         appBar: AppBar(
           title: Text('가다 뭐먹지?'),
           backgroundColor: Colors.yellowAccent,
-          bottom: TabBar(
+          bottom:  TabBar(
             unselectedLabelColor: Colors.grey,
             controller: _tabController,
             labelColor: Colors.black,
@@ -423,6 +423,7 @@ Widget _buildRestaurantItem(Map<String, dynamic> restaurant) {
         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
       ),
       subtitle: Text("${restaurant['vicinity']}"),
+      backgroundColor: Colors.white10,
       children: <Widget>[
         Padding(
           padding: EdgeInsets.all(16.0),

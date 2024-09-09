@@ -47,6 +47,7 @@ class _LocationSearchState extends State<LocationSearch> {
     super.initState();
   }
 
+  // 출발지와 목적지가 모두 입력되었는지 확인하는 메서드
   bool _isButtonEnabled() {
     return _startLocation.isNotEmpty && _endLocation.isNotEmpty;
   }
@@ -56,17 +57,13 @@ class _LocationSearchState extends State<LocationSearch> {
     final dLat = (lat2 - lat1) * pi / 180;
     final dLng = (lng2 - lng1) * pi / 180;
     final a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1 * pi / 180) *
-            cos(lat2 * pi / 180) *
-            sin(dLng / 2) *
-            sin(dLng / 2);
+        cos(lat1 * pi / 180) * cos(lat2 * pi / 180) * sin(dLng / 2) * sin(dLng / 2);
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return R * c;
   }
 
   Future<void> _getCurrentLocationAndAddress() async {
     try {
-      // Google Geolocation API 요청
       final String apiKey = 'AIzaSyDMKs41kiiacK9CNt_nNEZXkv0gwoVC36Y';
       final String geolocationUrl =
           'https://www.googleapis.com/geolocation/v1/geolocate?key=$apiKey';
@@ -78,7 +75,6 @@ class _LocationSearchState extends State<LocationSearch> {
         double lat = locationData['location']['lat'];
         double lng = locationData['location']['lng'];
 
-        // Google Geocoding API 요청 (위도, 경도 -> 도로명 주소)
         final String geocodeUrl =
             'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey&language=ko';
 
@@ -116,12 +112,10 @@ class _LocationSearchState extends State<LocationSearch> {
       double endLat = double.parse(_endLatitude);
       double endLng = double.parse(_endLongitude);
 
-      double distanceInKm =
-          calculateDistance(startLat, startLng, endLat, endLng);
+      double distanceInKm = calculateDistance(startLat, startLng, endLat, endLng);
 
       setState(() {
-        _distanceMessage =
-            '두 지점 사이의 거리 : ${distanceInKm.toStringAsFixed(2)} km';
+        _distanceMessage = '두 지점 사이의 거리 : ${distanceInKm.toStringAsFixed(2)} km';
       });
     }
   }
@@ -132,6 +126,13 @@ class _LocationSearchState extends State<LocationSearch> {
       appBar: AppBar(
         title: Text('가다 뭐먹지?'),
         backgroundColor: Colors.yellowAccent,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(4.0), // 선의 두께
+          child: Container(
+            color: Colors.black, // 선의 색상
+            height: 2.0, // 선의 두께
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -190,6 +191,35 @@ class _LocationSearchState extends State<LocationSearch> {
                     ),
                   ),
                 ),
+                IconButton(
+                  onPressed: () => {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return KpostalView(callback: (Kpostal result) {
+                            _startController.text = result.roadAddress;
+                            setState(() {
+                              _startLocation = result.roadAddress;
+                              _startLatitude = result.latitude.toString();
+                              _startLongitude = result.longitude.toString();
+                              _calculateDistance();
+                            });
+                          });
+                        },
+                      ),
+                    )
+                  },
+                  icon: Icon(Icons.search, size: 40),
+                  style: IconButton.styleFrom(
+                    side: BorderSide(
+                          color: Colors.yellow,
+                          width: 2,
+                        ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
               ],
             ),
             SizedBox(height: 20),
@@ -201,26 +231,26 @@ class _LocationSearchState extends State<LocationSearch> {
                     controller: _endController,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Colors.white10,
                       hintText: '목적지를 설정해주세요.',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: Colors.blue,
+                        borderSide:BorderSide(
+                          color: Colors.yellow,
                           width: 2,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(
-                          color: Colors.blue,
+                          color: Colors.yellow,
                           width: 2,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(
-                          color: Colors.blue,
+                          color: Colors.yellow,
                           width: 2,
                         ),
                       ),
@@ -247,7 +277,10 @@ class _LocationSearchState extends State<LocationSearch> {
                   },
                   icon: Icon(Icons.search, size: 40),
                   style: IconButton.styleFrom(
-                    side: BorderSide(color: Colors.blue, width: 2),
+                    side: BorderSide(
+                          color: Colors.yellow,
+                          width: 2,
+                        ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -257,23 +290,25 @@ class _LocationSearchState extends State<LocationSearch> {
             ),
             Text(_distanceMessage),
             ElevatedButton(
-              onPressed: () => {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => DirectionsAndRestaurantsScreen(
-                    startAddress: _startController.text,
-                    startLat: double.parse(_startLatitude),
-                    startLng: double.parse(_startLongitude),
-                    endLat: double.parse(_endLatitude),
-                    endLng: double.parse(_endLongitude),
-                    endAddress: _endController.text,
-                  ),
-                ))
-              },
+              onPressed: _isButtonEnabled() // 버튼이 활성화될 조건
+                  ? () => {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => DirectionsAndRestaurantsScreen(
+                            startAddress: _startController.text,
+                            startLat: double.parse(_startLatitude),
+                            startLng: double.parse(_startLongitude),
+                            endLat: double.parse(_endLatitude),
+                            endLng: double.parse(_endLongitude),
+                            endAddress: _endController.text,
+                          ),
+                        ))
+                      }
+                  : null, // 비활성화 상태일 때
               child: Text(
                 "음식점 찾기",
                 style: TextStyle(color: Colors.black),
               ),
-            )
+            ),
           ],
         ),
       ),
